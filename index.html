@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>No-Sleep Reset Guide</title>
+  <style>
+    body {
+      font-family: Georgia, 'Times New Roman', serif;
+      background: #1b1b1b;
+      color: #f8f2e7;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      line-height: 1.7;
+    }
+
+    h1 {
+      font-size: 2.8em;
+      margin-bottom: 10px;
+      color: #ffe7c2;
+      text-align: center;
+    }
+
+    #time {
+      font-size: 1.8em;
+      color: #ffdf91;
+      margin-bottom: 25px;
+    }
+
+    #task-box {
+      background: #2a2a2a;
+      padding: 25px 30px;
+      border-radius: 12px;
+      max-width: 700px;
+      box-shadow: 0 0 15px rgba(255, 222, 150, 0.2);
+    }
+
+    #task {
+      font-size: 1.5em;
+      margin-bottom: 12px;
+      color: #fff6e0;
+    }
+
+    #sub {
+      font-size: 1.1em;
+      color: #e0d2b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌕 No-Sleep Reset Schedule</h1>
+  <div id="time">Checking current hour...</div>
+  <div id="task-box">
+    <div id="task">Loading task...</div>
+    <div id="sub">Loading details...</div>
+  </div>
+
+  <script>
+    function getPlan(hour) {
+      if (hour < 5) return {
+        task: "Stay alert and active.",
+        sub: "You're still in the night zone — keep lights bright, move around, and don’t let boredom catch you."
+      };
+      if (hour < 9) return {
+        task: "Final stretch of the night!",
+        sub: "Sunlight is your tool now. Go outside if possible. Eat a light breakfast and avoid comfy spots."
+      };
+      if (hour < 13) return {
+        task: "Trick your brain into thinking it's just morning.",
+        sub: "Eat a real breakfast, stay physically busy, and avoid relaxing or lying down. Stay bright and busy."
+      };
+      if (hour < 17) return {
+        task: "Use your second wind!",
+        sub: "Do something productive or social. Eat a light lunch, and avoid sugar or caffeine from 3 PM onward."
+      };
+      if (hour < 19) return {
+        task: "Evening cooldown.",
+        sub: "Eat dinner. Avoid sugar, soda, or caffeine. Keep lighting a bit warm but stay standing and active."
+      };
+      if (hour < 21) return {
+        task: "Final push before victory.",
+        sub: "Do light activities to keep yourself distracted. No screens in bed. Just coast through these last hours."
+      };
+      return {
+        task: "Collapse into sleep.",
+        sub: "Room dark, cold, and quiet. No phone. You’ve done the hard part — now let yourself sleep deep."
+      };
+    }
+
+    function updateDisplay() {
+      const now = new Date();
+      const hour = now.getHours();
+      const minute = String(now.getMinutes()).padStart(2, '0');
+      const second = String(now.getSeconds()).padStart(2, '0');
+      const timeText = `Current Time: ${hour}:${minute}:${second}`;
+      const { task, sub } = getPlan(hour);
+      document.getElementById('time').textContent = timeText;
+      document.getElementById('task').textContent = task;
+      document.getElementById('sub').textContent = sub;
+    }
+
+    setInterval(updateDisplay, 1000);
+    updateDisplay();
+  </script>
+</body>
+</html>
