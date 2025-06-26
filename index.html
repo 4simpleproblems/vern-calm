@@ -1,108 +1,341 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>No-Sleep Reset Guide</title>
-  <style>
-    body {
-      font-family: Georgia, 'Times New Roman', serif;
-      background: #1b1b1b;
-      color: #f8f2e7;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px 20px;
-      line-height: 1.7;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VERN Calm</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for the page and interactive elements */
+        body {
+            font-family: 'Lora', serif;
+            -webkit-tap-highlight-color: transparent; /* Disable tap highlight on mobile */
+        }
 
-    h1 {
-      font-size: 2.8em;
-      margin-bottom: 10px;
-      color: #ffe7c2;
-      text-align: center;
-    }
+        /* Custom styling for the simple range slider */
+        .custom-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 20px;
+            background: #D1C7B8; /* Softer track color */
+            outline: none;
+            opacity: 0.9;
+            transition: opacity .2s;
+            border-radius: 12px;
+        }
 
-    #time {
-      font-size: 1.8em;
-      color: #ffdf91;
-      margin-bottom: 25px;
-    }
+        .custom-slider:hover {
+            opacity: 1;
+        }
 
-    #task-box {
-      background: #2a2a2a;
-      padding: 25px 30px;
-      border-radius: 12px;
-      max-width: 700px;
-      box-shadow: 0 0 15px rgba(255, 222, 150, 0.2);
-    }
+        .custom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 35px;
+            height: 35px;
+            background: #A69B8B; /* Matching thumb color */
+            cursor: pointer;
+            border-radius: 50%;
+            border: 4px solid #F5F0E8; /* Border to match page background */
+        }
 
-    #task {
-      font-size: 1.5em;
-      margin-bottom: 12px;
-      color: #fff6e0;
-    }
+        .custom-slider::-moz-range-thumb {
+            width: 35px;
+            height: 35px;
+            background: #A69B8B;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 4px solid #F5F0E8;
+        }
 
-    #sub {
-      font-size: 1.1em;
-      color: #e0d2b3;
-    }
-  </style>
+        /* Styles for the knobbed slider */
+        .knob-slider-container {
+            position: relative;
+            width: 100%;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 0;
+        }
+
+        .knob-track {
+            position: absolute;
+            width: 100%;
+            height: 8px;
+            background-color: #D1C7B8;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .knob-notch {
+            width: 20px;
+            height: 20px;
+            background-color: #D1C7B8;
+            border-radius: 50%;
+        }
+
+        .knob {
+            position: absolute;
+            left: 0;
+            width: 40px;
+            height: 40px;
+            background-color: #A69B8B;
+            border-radius: 50%;
+            cursor: grab;
+            border: 5px solid #F5F0E8;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 10;
+            transition: transform 0.2s ease-out;
+        }
+
+        .knob:active {
+            cursor: grabbing;
+        }
+        
+        /* Styles for the new Toggle Switch */
+        .toggle-switch {
+            width: 80px;
+            height: 40px;
+            background-color: #D1C7B8;
+            border-radius: 20px;
+            padding: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .toggle-switch.on {
+            background-color: #A69B8B;
+        }
+        .toggle-knob {
+            width: 32px;
+            height: 32px;
+            background-color: white;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .toggle-switch.on .toggle-knob {
+            transform: translateX(40px);
+        }
+
+        /* Styles for the new Pop Buttons */
+        .pop-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            width: 240px; /* Give the grid a fixed width for consistency */
+        }
+        .pop-button {
+            width: 100%;
+            padding-bottom: 100%; /* Creates a square aspect ratio */
+            position: relative;
+            border-radius: 30%;
+            background-color: #D1C7B8;
+            cursor: pointer;
+            transition: transform 0.1s ease, background-color 0.1s ease;
+        }
+        .pop-button:active {
+            transform: scale(0.9);
+            background-color: #A69B8B;
+        }
+
+    </style>
 </head>
-<body>
-  <h1>🌕 No-Sleep Reset Schedule</h1>
-  <div id="time">Checking current hour...</div>
-  <div id="task-box">
-    <div id="task">Loading task...</div>
-    <div id="sub">Loading details...</div>
-  </div>
+<body class="bg-[#F5F0E8] text-[#5a5245]">
 
-  <script>
-    function getPlan(hour) {
-      if (hour < 5) return {
-        task: "Stay alert and active.",
-        sub: "You're still in the night zone — keep lights bright, move around, and don’t let boredom catch you."
-      };
-      if (hour < 9) return {
-        task: "Final stretch of the night!",
-        sub: "Sunlight is your tool now. Go outside if possible. Eat a light breakfast and avoid comfy spots."
-      };
-      if (hour < 13) return {
-        task: "Trick your brain into thinking it's just morning.",
-        sub: "Eat a real breakfast, stay physically busy, and avoid relaxing or lying down. Stay bright and busy."
-      };
-      if (hour < 17) return {
-        task: "Use your second wind!",
-        sub: "Do something productive or social. Eat a light lunch, and avoid sugar or caffeine from 3 PM onward."
-      };
-      if (hour < 19) return {
-        task: "Evening cooldown.",
-        sub: "Eat dinner. Avoid sugar, soda, or caffeine. Keep lighting a bit warm but stay standing and active."
-      };
-      if (hour < 21) return {
-        task: "Final push before victory.",
-        sub: "Do light activities to keep yourself distracted. No screens in bed. Just coast through these last hours."
-      };
-      return {
-        task: "Collapse into sleep.",
-        sub: "Room dark, cold, and quiet. No phone. You’ve done the hard part — now let yourself sleep deep."
-      };
-    }
+    <div class="min-h-screen w-full flex flex-col items-center justify-center p-4 lg:p-8 space-y-8">
 
-    function updateDisplay() {
-      const now = new Date();
-      const hour = now.getHours();
-      const minute = String(now.getMinutes()).padStart(2, '0');
-      const second = String(now.getSeconds()).padStart(2, '0');
-      const timeText = `Current Time: ${hour}:${minute}:${second}`;
-      const { task, sub } = getPlan(hour);
-      document.getElementById('time').textContent = timeText;
-      document.getElementById('task').textContent = task;
-      document.getElementById('sub').textContent = sub;
-    }
+        <h1 class="text-4xl sm:text-5xl font-medium text-center">VERN Calm</h1>
 
-    setInterval(updateDisplay, 1000);
-    updateDisplay();
-  </script>
+        <!-- Main container for all interactive elements, now horizontal on large screens -->
+        <div class="w-full max-w-6xl mx-auto p-6 lg:p-10 bg-[#EAE3D9] rounded-3xl shadow-lg flex flex-col lg:flex-row justify-around items-center lg:items-start space-y-10 lg:space-y-0 lg:space-x-8">
+
+            <!-- Column 1: Main Button and Toggle -->
+            <div class="flex flex-col items-center space-y-10">
+                <!-- 1. Simple Circular Button -->
+                <div class="text-center">
+                    <h2 class="text-xl mb-4">Button</h2>
+                    <button id="soundButton" class="w-28 h-28 sm:w-32 sm:h-32 bg-[#A69B8B] rounded-full shadow-md active:shadow-inner active:scale-95 transition-all focus:outline-none"></button>
+                </div>
+                <!-- 4. Toggle Switch -->
+                <div class="text-center">
+                    <h2 class="text-xl mb-4">Switch</h2>
+                    <div id="toggleSwitch" class="toggle-switch mx-auto">
+                        <div class="toggle-knob"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 2: Sliders -->
+            <div class="w-full lg:w-2/5 flex flex-col space-y-12 pt-2">
+                <!-- 2. Simple Custom Slider -->
+                <div class="text-center">
+                    <h2 class="text-xl mb-4">Slider</h2>
+                    <input type="range" min="1" max="100" value="50" class="custom-slider">
+                </div>
+                <!-- 3. Knobbed Slider -->
+                <div class="text-center">
+                    <h2 class="text-xl mb-4">Knob Slider</h2>
+                    <div id="knobSlider" class="knob-slider-container">
+                        <div class="knob-track">
+                           <!-- Notches will be dynamically generated here -->
+                        </div>
+                        <div id="knob" class="knob"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 3: Pop Grid -->
+            <div class="flex flex-col items-center text-center">
+                <h2 class="text-xl mb-4">Pop Buttons</h2>
+                <div id="popGrid" class="pop-grid">
+                    <!-- Pop buttons will be dynamically generated here -->
+                </div>
+            </div>
+
+        </div>
+        
+        <p class="text-center text-sm text-gray-500">A quiet place for gentle interaction.</p>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- Sound Engine (using Tone.js) ---
+            const synth = new Tone.MembraneSynth({
+                octaves: 4, pitchDecay: 0.1,
+                oscillator: { type: "sine" },
+                envelope: { attack: 0.001, decay: 0.2, sustain: 0.01, release: 0.2 }
+            }).toDestination();
+
+            const popSynth = new Tone.PluckSynth({
+                attackNoise: 0.5,
+                dampening: 4000,
+                resonance: 0.7
+            }).toDestination();
+
+            function playClick(note = 'C2', duration = '8n', synthType = synth) {
+                if (Tone.context.state !== 'running') {
+                    Tone.start();
+                }
+                synthType.triggerAttackRelease(note, duration);
+            }
+
+            // --- 1. Circular Button Interaction ---
+            const soundButton = document.getElementById('soundButton');
+            soundButton.addEventListener('click', () => playClick('G2', '16n'));
+            soundButton.addEventListener('touchstart', (e) => { e.preventDefault(); playClick('G2', '16n'); }, { passive: false });
+
+            // --- 2. Knobbed Slider Interaction ---
+            const knobSlider = document.getElementById('knobSlider');
+            const knob = document.getElementById('knob');
+            const track = knobSlider.querySelector('.knob-track');
+            const numNotches = 5;
+            let active = false, currentX, initialX, lastStep = 0;
+            let sliderWidth, stepWidth;
+
+            for (let i = 0; i < numNotches; i++) {
+                track.appendChild(document.createElement('div')).className = 'knob-notch';
+            }
+
+            function updateKnobSliderDimensions() {
+                sliderWidth = track.offsetWidth;
+                stepWidth = sliderWidth / (numNotches - 1);
+                
+                // Recalculate position based on current step
+                let currentStep = lastStep;
+                try {
+                     currentStep = Math.round((knob.getBoundingClientRect().left - track.getBoundingClientRect().left + (knob.offsetWidth / 2)) / stepWidth);
+                } catch(e) {
+                    // This can fail if the element isn't visible yet, default to lastStep
+                }
+                const newPosition = (currentStep * stepWidth) - (knob.offsetWidth / 2);
+                setTranslate(newPosition, knob);
+            }
+            
+            // Set initial position
+            updateKnobSliderDimensions();
+            setTranslate(-knob.offsetWidth / 2, knob);
+            
+            function dragStart(e) {
+                if (e.target === knob) {
+                    e.preventDefault();
+                    active = true;
+                    knob.style.cursor = 'grabbing';
+                }
+            }
+
+            function dragEnd(e) {
+                if (!active) return;
+                active = false;
+                knob.style.cursor = 'grab';
+                const finalPosition = knob.getBoundingClientRect().left - track.getBoundingClientRect().left + (knob.offsetWidth / 2);
+                const step = Math.round(finalPosition / stepWidth);
+                const snapX = (step * stepWidth) - (knob.offsetWidth / 2);
+                setTranslate(snapX, knob);
+                 lastStep = step;
+            }
+
+            function drag(e) {
+                if (!active) return;
+                e.preventDefault();
+                let clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+                const sliderRect = knobSlider.getBoundingClientRect();
+                currentX = clientX - sliderRect.left - (knob.offsetWidth / 2);
+                const minX = -knob.offsetWidth / 2, maxX = sliderWidth - knob.offsetWidth / 2;
+                currentX = Math.max(minX, Math.min(currentX, maxX));
+                setTranslate(currentX, knob);
+                const currentStep = Math.round((currentX + knob.offsetWidth / 2) / stepWidth);
+                if (currentStep !== lastStep) {
+                    playClick('C3', '32n');
+                    lastStep = currentStep;
+                }
+            }
+
+            function setTranslate(xPos, el) {
+                el.style.transform = `translateX(${xPos}px)`;
+            }
+
+            ['touchstart', 'mousedown'].forEach(evt => knobSlider.addEventListener(evt, dragStart, { passive: false }));
+            ['touchend', 'mouseup', 'mouseleave'].forEach(evt => document.addEventListener(evt, dragEnd));
+            ['touchmove', 'mousemove'].forEach(evt => document.addEventListener(evt, drag, { passive: false }));
+            window.addEventListener('resize', updateKnobSliderDimensions);
+            // Also run on load to ensure correct initial state
+            updateKnobSliderDimensions();
+
+
+            // --- 4. Toggle Switch Interaction ---
+            const toggleSwitch = document.getElementById('toggleSwitch');
+            toggleSwitch.addEventListener('click', () => {
+                const isOn = toggleSwitch.classList.toggle('on');
+                playClick(isOn ? 'C4' : 'G3', '16n');
+            });
+
+            // --- 5. Pop Buttons Interaction ---
+            const popGrid = document.getElementById('popGrid');
+            const popNotes = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'D5'];
+            for (let i = 0; i < 9; i++) {
+                const popButton = document.createElement('div');
+                popButton.className = 'pop-button';
+                const note = popNotes[i % popNotes.length];
+                
+                const playSound = () => playClick(note, '8n', popSynth);
+
+                popButton.addEventListener('mousedown', playSound);
+                popButton.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    playSound();
+                }, { passive: false });
+                popGrid.appendChild(popButton);
+            }
+        });
+    </script>
+
 </body>
 </html>
