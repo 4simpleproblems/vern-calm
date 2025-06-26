@@ -61,8 +61,21 @@
 
         /* Styles for the Pop Buttons */
         .pop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; width: 240px; }
-        .pop-button { width: 100%; padding-bottom: 100%; position: relative; border-radius: 30%; background-color: #D1C7B8; cursor: pointer; transition: transform 0.1s ease, background-color 0.1s ease; }
-        .pop-button:active { transform: scale(0.9); background-color: #A69B8B; }
+        .pop-button { 
+            width: 100%; 
+            padding-bottom: 100%; 
+            position: relative; 
+            border-radius: 30%; 
+            background-color: #D1C7B8; 
+            cursor: pointer; 
+            transition: transform 0.1s ease, background-color 0.2s ease, box-shadow 0.2s ease; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .pop-button.popped {
+            background-color: #bfaea0; /* Darker color when popped */
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); /* Inset shadow to look pressed */
+            transform: scale(0.95);
+        }
         
         /* Styles for the Number Slider */
         .number-slider-container .number-display {
@@ -86,6 +99,27 @@
             50% { transform: scale(1.1); opacity: 1; }
         }
 
+        /* Styles for the new Number List */
+        .number-list-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; width: 280px; }
+        .number-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            background-color: #D1C7B8;
+            border-radius: 50%;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #5a5245;
+            cursor: pointer;
+            transition: transform 0.1s ease, background-color 0.1s ease;
+        }
+        .number-button:active {
+            transform: scale(0.9);
+            background-color: #A69B8B;
+        }
+
     </style>
 </head>
 <body class="bg-[#F5F0E8] text-[#5a5245]">
@@ -95,37 +129,37 @@
         <h1 class="text-4xl sm:text-5xl font-medium text-center">VERN Calm</h1>
 
         <!-- Main container for all interactive elements -->
-        <div class="w-full max-w-7xl mx-auto p-6 lg:p-10 bg-[#EAE3D9] rounded-3xl shadow-lg flex flex-col lg:flex-row flex-wrap justify-center items-center lg:items-start gap-y-10 gap-x-8">
+        <div class="w-full max-w-7xl mx-auto p-6 lg:p-10 bg-[#EAE3D9] rounded-3xl shadow-lg flex flex-col lg:flex-row flex-wrap justify-center items-start gap-y-10 gap-x-8">
 
-            <!-- Group 1: Breathing and Pop Buttons -->
-            <div class="flex flex-col items-center space-y-10">
-                 <div class="text-center">
+            <!-- Group 1: Breathing and Big Button -->
+            <div class="flex flex-col items-center space-y-10 text-center">
+                 <div>
                     <h2 class="text-xl mb-4">Breathing Circle</h2>
                     <div id="breathingCircle" class="breathing-circle"></div>
                 </div>
-                <div class="text-center">
-                    <h2 class="text-xl mb-4">Pop Buttons</h2>
-                    <div id="popGrid" class="pop-grid"></div>
+                <div>
+                    <h2 class="text-xl mb-4">Button</h2>
+                    <button id="soundButton" class="w-28 h-28 sm:w-32 sm:h-32 bg-[#A69B8B] rounded-full shadow-md active:shadow-inner active:scale-95 transition-all focus:outline-none"></button>
                 </div>
             </div>
 
             <!-- Group 2: Sliders and Toggles -->
-            <div class="w-full sm:w-80 lg:w-1/3 flex-shrink-0 flex flex-col space-y-12 pt-2">
-                <div class="text-center">
+            <div class="w-full sm:w-80 lg:w-1/3 flex-shrink-0 flex flex-col space-y-12 pt-2 text-center">
+                <div>
                     <h2 class="text-xl mb-4">Number Slider</h2>
                     <div class="number-slider-container">
                         <p id="numberDisplay" class="number-display">50</p>
                         <input type="range" id="numberSlider" min="0" max="100" value="50" class="custom-slider">
                     </div>
                 </div>
-                <div class="text-center">
+                <div>
                     <h2 class="text-xl mb-4">Knob Slider</h2>
                     <div id="knobSlider" class="knob-slider-container">
                         <div class="knob-track"></div>
                         <div id="knob" class="knob"></div>
                     </div>
                 </div>
-                 <div class="text-center">
+                <div>
                     <h2 class="text-xl mb-4">Switch</h2>
                     <div id="toggleSwitch" class="toggle-switch mx-auto">
                         <div class="toggle-knob"></div>
@@ -133,10 +167,16 @@
                 </div>
             </div>
 
-             <!-- Group 3: Big Button -->
-            <div class="flex flex-col items-center text-center">
-                <h2 class="text-xl mb-4">Button</h2>
-                <button id="soundButton" class="w-28 h-28 sm:w-32 sm:h-32 bg-[#A69B8B] rounded-full shadow-md active:shadow-inner active:scale-95 transition-all focus:outline-none"></button>
+             <!-- Group 3: Interactive Grids -->
+            <div class="flex flex-col items-center space-y-10 text-center">
+                <div>
+                    <h2 class="text-xl mb-4">Pop Buttons</h2>
+                    <div id="popGrid" class="pop-grid"></div>
+                </div>
+                <div>
+                    <h2 class="text-xl mb-4">Click a Number</h2>
+                    <div id="numberList" class="number-list-grid"></div>
+                </div>
             </div>
         </div>
         
@@ -147,31 +187,56 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
+            let isAudioReady = false;
+
+            // --- Universal Audio/Speech Initializer ---
+            function initializeAudio() {
+                if (isAudioReady) return;
+                Tone.start().then(() => console.log("Audio context started."));
+                const utterance = new SpeechSynthesisUtterance("");
+                utterance.volume = 0;
+                window.speechSynthesis.speak(utterance);
+                isAudioReady = true;
+                console.log("Audio and Speech Initialized.");
+                document.body.removeEventListener('touchstart', initializeAudio);
+                document.body.removeEventListener('mousedown', initializeAudio);
+            }
+            document.body.addEventListener('touchstart', initializeAudio, { once: true });
+            document.body.addEventListener('mousedown', initializeAudio, { once: true });
+
+
             // --- Sound Engine (using Tone.js) ---
             const baseSynth = new Tone.MembraneSynth({ pitchDecay: 0.02, octaves: 2, oscillator: { type: "sine" }, envelope: { attack: 0.01, decay: 0.3, sustain: 0.01, release: 0.2 } }).toDestination();
-            const bellSynth = new Tone.MetalSynth({ frequency: 250, envelope: { attack: 0.001, decay: 0.4, release: 0.2 }, harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5 }).toDestination();
+            
+            // Softer bell sound for numbers
+            const softBellSynth = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.5, sustain: 0.1, release: 1.0 } }).toDestination();
+            softBellSynth.volume.value = -6;
+
+            // More realistic pop sound
+            const popSynth = new Tone.MembraneSynth({ pitchDecay: 0.05, octaves: 10, oscillator: { type: 'sine' }, envelope: { attack: 0.001, decay: 0.2, sustain: 0 } }).toDestination();
+            popSynth.volume.value = -3;
+            
             const breathSound = new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 1, decay: 1, sustain: 0.1, release: 1 } }).toDestination();
-            breathSound.volume.value = -20; // Make it quiet
+            breathSound.volume.value = -20;
 
             function playSound(note = 'C2', duration = '8n', synth = baseSynth) {
-                if (Tone.context.state !== 'running') { Tone.start(); }
+                if (!isAudioReady) return;
                 synth.triggerAttackRelease(note, duration);
             }
 
             // --- Speech Synthesis ---
-            let speechUtterance = new SpeechSynthesisUtterance();
-            speechUtterance.lang = 'en-US';
-            speechUtterance.rate = 0.9;
-            speechUtterance.pitch = 1.1;
             function speak(text) {
-                if (speechSynthesis.speaking) return; // Don't interrupt
-                speechUtterance.text = text;
-                window.speechSynthesis.speak(speechUtterance);
+                if (!isAudioReady || speechSynthesis.speaking) return;
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9;
+                utterance.pitch = 1.1;
+                window.speechSynthesis.speak(utterance);
             }
 
             // --- Breathing Circle ---
-            const breathingCircle = document.getElementById('breathingCircle');
-            breathingCircle.addEventListener('click', () => {
+            document.getElementById('breathingCircle').addEventListener('click', () => {
+                if (!isAudioReady) return;
                 if (breathSound.volume.value === -20) {
                     breathSound.triggerAttack();
                     breathSound.volume.rampTo(0, 4);
@@ -182,15 +247,36 @@
 
             // --- Pop Buttons Interaction ---
             const popGrid = document.getElementById('popGrid');
-            const popNotes = ['C5', 'E5', 'G5', 'A5', 'C6', 'D5', 'F5', 'B5', 'D6'];
             for (let i = 0; i < 9; i++) {
                 const popButton = document.createElement('div');
                 popButton.className = 'pop-button';
-                const note = popNotes[i];
-                const playPopSound = () => playSound(note, '16n', bellSynth);
-                popButton.addEventListener('mousedown', playPopSound);
-                popButton.addEventListener('touchstart', (e) => { e.preventDefault(); playPopSound(); }, { passive: false });
+                
+                const handlePop = () => {
+                    const isPopped = popButton.classList.toggle('popped');
+                    const note = isPopped ? 'C5' : 'G4'; // Different sound for pop in and pop out
+                    playSound(note, '8n', popSynth);
+                };
+
+                popButton.addEventListener('mousedown', handlePop);
+                popButton.addEventListener('touchstart', (e) => { e.preventDefault(); handlePop(); }, { passive: false });
                 popGrid.appendChild(popButton);
+            }
+
+            // --- Number List Interaction ---
+            const numberList = document.getElementById('numberList');
+            const numberNotes = ['C5', 'D5', 'E5', 'F5', 'G5', 'A5', 'B5', 'C6', 'D6', 'E6'];
+            for (let i = 1; i <= 10; i++) {
+                const numButton = document.createElement('div');
+                numButton.className = 'number-button';
+                numButton.textContent = i;
+                const note = numberNotes[i - 1];
+                const handleNumClick = () => {
+                    playSound(note, '8n', softBellSynth);
+                    speak(i.toString());
+                };
+                numButton.addEventListener('mousedown', handleNumClick);
+                numButton.addEventListener('touchstart', (e) => { e.preventDefault(); handleNumClick(); }, { passive: false });
+                numberList.appendChild(numButton);
             }
 
             // --- Number Slider Interaction ---
@@ -200,7 +286,6 @@
             numberSlider.addEventListener('input', () => {
                 const num = numberSlider.value;
                 numberDisplay.textContent = num;
-                // Speak the number, but debounce to avoid spamming
                 clearTimeout(speakTimeout);
                 speakTimeout = setTimeout(() => speak(num), 300);
             });
@@ -217,15 +302,14 @@
                 sliderWidth = track.offsetWidth;
                 if(sliderWidth > 0){
                     stepWidth = sliderWidth / (numNotches - 1);
-                    const currentStep = lastStep;
-                    const newPosition = (currentStep * stepWidth) - (knob.offsetWidth / 2);
+                    const newPosition = (lastStep * stepWidth) - (knob.offsetWidth / 2);
                     setTranslate(newPosition, knob);
                 }
             }
             updateKnobSliderDimensions();
             
             function dragStart(e) { if (e.target === knob) { e.preventDefault(); active = true; knob.style.cursor = 'grabbing'; } }
-            function dragEnd(e) {
+            function dragEnd() {
                 if (!active) return;
                 active = false; knob.style.cursor = 'grab';
                 const finalPosition = knob.getBoundingClientRect().left - track.getBoundingClientRect().left + (knob.offsetWidth / 2);
@@ -252,16 +336,14 @@
             window.addEventListener('load', updateKnobSliderDimensions);
 
             // --- Toggle Switch Interaction ---
-            const toggleSwitch = document.getElementById('toggleSwitch');
-            toggleSwitch.addEventListener('click', () => {
-                const isOn = toggleSwitch.classList.toggle('on');
+            document.getElementById('toggleSwitch').addEventListener('click', (event) => {
+                const isOn = event.currentTarget.classList.toggle('on');
                 playSound(isOn ? 'E3' : 'C3', '16n');
             });
 
             // --- Big Button Interaction ---
-            const soundButton = document.getElementById('soundButton');
-            soundButton.addEventListener('click', () => playSound('G2', '16n'));
-            soundButton.addEventListener('touchstart', (e) => { e.preventDefault(); playSound('G2', '16n'); }, { passive: false });
+            document.getElementById('soundButton').addEventListener('click', () => playSound('G2', '16n'));
+            document.getElementById('soundButton').addEventListener('touchstart', (e) => { e.preventDefault(); playSound('G2', '16n'); }, { passive: false });
         });
     </script>
 
