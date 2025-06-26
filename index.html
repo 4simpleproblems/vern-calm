@@ -60,7 +60,7 @@
         .toggle-switch.on .toggle-knob { transform: translateX(40px); }
 
         /* Styles for the Pop Buttons */
-        .pop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; width: 240px; }
+        .pop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; width: 100%; max-width: 240px; }
         .pop-button { 
             width: 100%; 
             padding-bottom: 100%; 
@@ -102,7 +102,7 @@
         }
 
         /* Styles for the Number List */
-        .number-list-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; width: 280px; }
+        .number-list-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; width: 100%; max-width: 280px;}
         .number-button {
             display: flex;
             align-items: center;
@@ -137,6 +137,25 @@
             transition: transform 0.1s ease;
         }
         .relation-button:active { transform: scale(0.95); }
+        
+        /* Styles for Communication Helper */
+        .communication-helper { display: flex; flex-direction: column; gap: 1rem; width: 100%; }
+        .communication-category { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
+        .comm-button {
+            background-color: #c7bdae;
+            color: #5a5245;
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.1s ease, background-color 0.2s ease;
+        }
+        .comm-button:active {
+            transform: scale(0.95);
+            background-color: #A69B8B;
+            color: white;
+        }
 
     </style>
 </head>
@@ -146,11 +165,11 @@
 
         <h1 class="text-4xl sm:text-5xl font-medium text-center">VERN Calm</h1>
 
-        <!-- Main container for all interactive elements -->
-        <div class="w-full max-w-screen-xl mx-auto p-6 lg:p-10 bg-[#EAE3D9] rounded-3xl shadow-lg flex flex-col lg:flex-row flex-wrap justify-center items-start gap-y-10 gap-x-8">
+        <!-- Main container for all interactive elements, now using a responsive grid -->
+        <div class="w-full max-w-screen-xl mx-auto p-6 lg:p-10 bg-[#EAE3D9] rounded-3xl shadow-lg grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 justify-items-center">
 
             <!-- Group 1: Visuals & Simple Actions -->
-            <div class="flex flex-col items-center space-y-10 text-center">
+            <div class="flex flex-col items-center space-y-10 text-center w-full max-w-xs">
                  <div>
                     <h2 class="text-xl mb-4">Breathing Circle</h2>
                     <div id="breathingCircle" class="breathing-circle"></div>
@@ -162,7 +181,7 @@
             </div>
 
             <!-- Group 2: Sliders -->
-            <div class="w-full sm:w-80 lg:w-1/4 flex-shrink-0 flex flex-col space-y-6 pt-2 text-center">
+            <div class="flex flex-col w-full max-w-xs space-y-6 pt-2 text-center">
                 <div>
                     <h2 class="text-xl mb-4">Alphabet Slider</h2>
                     <div class="alphabet-slider-container">
@@ -193,8 +212,8 @@
                 </div>
             </div>
 
-            <!-- Group 3: Number Interactions -->
-            <div class="flex flex-col items-center space-y-10 text-center">
+            <!-- Group 3: Number & Communication Interactions -->
+            <div class="flex flex-col items-center space-y-10 text-center w-full max-w-xs">
                 <div>
                     <h2 class="text-xl mb-4">Number Relations</h2>
                     <div id="numberRelations" class="number-relations-container">
@@ -208,16 +227,27 @@
                     </div>
                 </div>
                 <div>
+                     <h2 class="text-xl mb-4">Communication Helper</h2>
+                     <div id="communicationHelper" class="communication-helper">
+                        <h3 class="font-semibold">Manners</h3>
+                        <div id="commManners" class="communication-category"></div>
+                        <h3 class="font-semibold">Feelings</h3>
+                        <div id="commFeelings" class="communication-category"></div>
+                        <h3 class="font-semibold">Talking</h3>
+                        <div id="commTalking" class="communication-category"></div>
+                     </div>
+                </div>
+                <div>
                     <h2 class="text-xl mb-4">Click a Number</h2>
                     <div id="numberList" class="number-list-grid"></div>
                 </div>
             </div>
 
              <!-- Group 4: Buttons & Switches -->
-            <div class="flex flex-col items-center space-y-10 text-center">
+            <div class="flex flex-col items-center space-y-10 text-center w-full max-w-xs">
                  <div>
                     <h2 class="text-xl mb-4">Knob Slider</h2>
-                    <div id="knobSlider" class="knob-slider-container w-64">
+                    <div id="knobSlider" class="knob-slider-container w-full">
                         <div class="knob-track"></div>
                         <div id="knob" class="knob"></div>
                     </div>
@@ -331,31 +361,44 @@
                     let currentNum = parseInt(relationDisplay.textContent);
                     const op = e.target.dataset.op;
                     let result = currentNum;
-                    let speechText = "";
 
                     switch(op) {
-                        case 'add':
-                            result = currentNum + 10;
-                            speechText = `${currentNum} plus 10 is ${result}`;
-                            break;
-                        case 'sub':
-                            result = currentNum - 10;
-                            speechText = `${currentNum} minus 10 is ${result}`;
-                            break;
-                        case 'double':
-                            result = currentNum * 2;
-                            speechText = `Double ${currentNum} is ${result}`;
-                            break;
-                        case 'half':
-                            result = Math.floor(currentNum / 2);
-                            speechText = `Half of ${currentNum} is ${result}`;
-                            break;
+                        case 'add': result = currentNum + 10; break;
+                        case 'sub': result = currentNum - 10; break;
+                        case 'double': result = currentNum * 2; break;
+                        case 'half': result = Math.floor(currentNum / 2); break;
                     }
                     relationDisplay.textContent = result;
-                    playSound('C4', '8n', softBellSynth);
-                    speak(speechText);
+                    playSound('C4', '8n', softBellSynth); // Play sound but no speech
                 });
             });
+
+            // --- Communication Helper ---
+            const commCategories = {
+                commManners: ['Please', 'Thank You', 'Excuse Me', `You're Welcome`],
+                commFeelings: ['Happy', 'Sad', 'Excited', 'Calm', 'Tired'],
+                commTalking: ['Hello', 'Goodbye', 'My name is...', 'How are you?', 'Listen']
+            };
+
+            for (const categoryId in commCategories) {
+                const container = document.getElementById(categoryId);
+                commCategories[categoryId].forEach(text => {
+                    const button = document.createElement('button');
+                    button.className = 'comm-button';
+                    button.textContent = text;
+                    button.addEventListener('click', () => {
+                        speak(text);
+                        playSound('E4', '16n', softBellSynth);
+                    });
+                     button.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        speak(text);
+                        playSound('E4', '16n', softBellSynth);
+                    }, { passive: false });
+                    container.appendChild(button);
+                });
+            }
+
 
             // --- Sliders Interaction ---
             const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
