@@ -79,11 +79,12 @@
         
         /* Styles for the Number Slider */
         .number-slider-container .number-display {
-            font-size: 2.2rem; /* Adjusted for very big numbers */
+            font-size: 2rem; /* Adjusted for very big numbers */
             line-height: 1.2;
             font-weight: 600;
             color: #8b8071;
             min-height: 50px;
+            word-break: break-all; /* Allow very large numbers to wrap */
         }
         
         /* Styles for the Breathing Animation */
@@ -161,10 +162,10 @@
                     </div>
                 </div>
                  <div>
-                    <h2 class="text-xl mb-4">Even Bigger Slider</h2>
+                    <h2 class="text-xl mb-4">Biggest Slider</h2>
                     <div class="number-slider-container">
-                        <p id="evenBiggerNumberDisplay" class="number-display">1,000,000,000</p>
-                        <input type="range" id="evenBiggerSlider" min="0" max="2000000000" value="1000000000" class="custom-slider">
+                        <p id="biggestNumberDisplay" class="number-display">500,000,000,000,000</p>
+                        <input type="range" id="biggestSlider" min="0" max="1000000000000000" value="500000000000000" class="custom-slider">
                     </div>
                 </div>
                 <div>
@@ -313,14 +314,15 @@
                 speak(bigNumberSlider.value);
             });
 
-            // --- Even Bigger Slider Interaction ---
-            const evenBiggerSlider = document.getElementById('evenBiggerSlider');
-            const evenBiggerNumberDisplay = document.getElementById('evenBiggerNumberDisplay');
-            evenBiggerSlider.addEventListener('input', () => {
-                evenBiggerNumberDisplay.textContent = parseInt(evenBiggerSlider.value).toLocaleString('en-US');
+            // --- Biggest Slider Interaction ---
+            const biggestSlider = document.getElementById('biggestSlider');
+            const biggestNumberDisplay = document.getElementById('biggestNumberDisplay');
+            biggestSlider.addEventListener('input', () => {
+                // Use BigInt for numbers larger than Number.MAX_SAFE_INTEGER
+                biggestNumberDisplay.textContent = BigInt(biggestSlider.value).toLocaleString('en-US');
             });
-            evenBiggerSlider.addEventListener('change', () => {
-                speak(evenBiggerSlider.value);
+            biggestSlider.addEventListener('change', () => {
+                speak(biggestSlider.value);
             });
 
             // --- Knobbed Slider Interaction ---
