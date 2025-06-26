@@ -79,10 +79,10 @@
         
         /* Styles for the Number Slider */
         .number-slider-container .number-display {
-            font-size: 3rem;
+            font-size: 2.5rem; /* Slightly smaller for big numbers */
             font-weight: 600;
             color: #8b8071;
-            min-height: 60px;
+            min-height: 50px;
         }
         
         /* Styles for the Breathing Animation */
@@ -144,12 +144,19 @@
             </div>
 
             <!-- Group 2: Sliders and Toggles -->
-            <div class="w-full sm:w-80 lg:w-1/3 flex-shrink-0 flex flex-col space-y-12 pt-2 text-center">
+            <div class="w-full sm:w-80 lg:w-1/3 flex-shrink-0 flex flex-col space-y-10 pt-2 text-center">
                 <div>
                     <h2 class="text-xl mb-4">Number Slider</h2>
                     <div class="number-slider-container">
                         <p id="numberDisplay" class="number-display">50</p>
                         <input type="range" id="numberSlider" min="0" max="100" value="50" class="custom-slider">
+                    </div>
+                </div>
+                <div>
+                    <h2 class="text-xl mb-4">Big Number Slider</h2>
+                    <div class="number-slider-container">
+                        <p id="bigNumberDisplay" class="number-display">500,000</p>
+                        <input type="range" id="bigNumberSlider" min="0" max="1000000" value="500000" class="custom-slider">
                     </div>
                 </div>
                 <div>
@@ -208,11 +215,9 @@
             // --- Sound Engine (using Tone.js) ---
             const baseSynth = new Tone.MembraneSynth({ pitchDecay: 0.02, octaves: 2, oscillator: { type: "sine" }, envelope: { attack: 0.01, decay: 0.3, sustain: 0.01, release: 0.2 } }).toDestination();
             
-            // Softer bell sound for numbers
             const softBellSynth = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.5, sustain: 0.1, release: 1.0 } }).toDestination();
             softBellSynth.volume.value = -6;
 
-            // More realistic pop sound
             const popSynth = new Tone.MembraneSynth({ pitchDecay: 0.05, octaves: 10, oscillator: { type: 'sine' }, envelope: { attack: 0.001, decay: 0.2, sustain: 0 } }).toDestination();
             popSynth.volume.value = -3;
             
@@ -226,7 +231,8 @@
 
             // --- Speech Synthesis ---
             function speak(text) {
-                if (!isAudioReady || speechSynthesis.speaking) return;
+                if (!isAudioReady) return;
+                window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'en-US';
                 utterance.rate = 0.9;
@@ -253,7 +259,7 @@
                 
                 const handlePop = () => {
                     const isPopped = popButton.classList.toggle('popped');
-                    const note = isPopped ? 'C5' : 'G4'; // Different sound for pop in and pop out
+                    const note = isPopped ? 'C5' : 'G4';
                     playSound(note, '8n', popSynth);
                 };
 
@@ -282,12 +288,21 @@
             // --- Number Slider Interaction ---
             const numberSlider = document.getElementById('numberSlider');
             const numberDisplay = document.getElementById('numberDisplay');
-            let speakTimeout;
             numberSlider.addEventListener('input', () => {
-                const num = numberSlider.value;
-                numberDisplay.textContent = num;
-                clearTimeout(speakTimeout);
-                speakTimeout = setTimeout(() => speak(num), 300);
+                numberDisplay.textContent = numberSlider.value;
+            });
+            numberSlider.addEventListener('change', () => {
+                speak(numberSlider.value);
+            });
+
+            // --- Big Number Slider Interaction ---
+            const bigNumberSlider = document.getElementById('bigNumberSlider');
+            const bigNumberDisplay = document.getElementById('bigNumberDisplay');
+            bigNumberSlider.addEventListener('input', () => {
+                bigNumberDisplay.textContent = parseInt(bigNumberSlider.value).toLocaleString('en-US');
+            });
+            bigNumberSlider.addEventListener('change', () => {
+                speak(bigNumberSlider.value);
             });
 
             // --- Knobbed Slider Interaction ---
