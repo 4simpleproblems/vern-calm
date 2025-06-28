@@ -140,7 +140,23 @@
         
         /* Styles for Communication Helper */
         .communication-helper { display: flex; flex-direction: column; gap: 1rem; width: 100%; }
-        .communication-category { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
+        .comm-tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; border-bottom: 2px solid #D1C7B8; padding-bottom: 0.5rem; }
+        .comm-tab {
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem 0.75rem 0 0;
+            cursor: pointer;
+            background-color: #EAE3D9;
+            color: #8b8071;
+            font-weight: 500;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .comm-tab.active {
+            background-color: #c7bdae;
+            color: #5a5245;
+        }
+        .comm-content { display: none; flex-direction:column; gap: 1rem; justify-content: center; padding-top: 1rem; }
+        .comm-content.active { display: flex; }
+        .comm-button-group { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
         .comm-button {
             background-color: #c7bdae;
             color: #5a5245;
@@ -156,6 +172,42 @@
             background-color: #A69B8B;
             color: white;
         }
+        
+        /* Styles for Custom Input Feature */
+        #customInputDisplay {
+            width: 100%;
+            min-height: 80px;
+            background-color: white;
+            border-radius: 1rem;
+            border: 2px solid #D1C7B8;
+            padding: 0.5rem 1rem;
+            font-size: 1.5rem;
+            color: #5a5245;
+            text-align: center;
+            overflow-wrap: break-word;
+            line-height: 1.5; /* Added for better vertical alignment */
+        }
+        .custom-keyboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+            gap: 0.5rem;
+            width: 100%;
+        }
+        .key {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 48px;
+            background-color: #D1C7B8;
+            border-radius: 8px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .key:active { transform: scale(0.95); background-color: #A69B8B; }
+        #key-speak { background-color: #9cb380; color: white; }
+        #key-clear { background-color: #d58888; color: white; }
+
 
     </style>
 </head>
@@ -165,22 +217,19 @@
 
         <h1 class="text-4xl sm:text-5xl font-medium text-center">VERN Calm</h1>
 
-        <!-- Main container for all interactive elements, now using a responsive grid -->
         <div class="w-full max-w-screen-xl mx-auto p-6 lg:p-10 bg-[#EAE3D9] rounded-3xl shadow-lg grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 justify-items-center">
 
-            <!-- Group 1: Visuals & Simple Actions -->
             <div class="flex flex-col items-center space-y-10 text-center w-full max-w-xs">
-                 <div>
-                    <h2 class="text-xl mb-4">Breathing Circle</h2>
-                    <div id="breathingCircle" class="breathing-circle"></div>
-                </div>
+                    <div>
+                        <h2 class="text-xl mb-4">Breathing Circle</h2>
+                        <div id="breathingCircle" class="breathing-circle"></div>
+                    </div>
                 <div>
                     <h2 class="text-xl mb-4">Pop Buttons</h2>
                     <div id="popGrid" class="pop-grid"></div>
                 </div>
             </div>
 
-            <!-- Group 2: Sliders -->
             <div class="flex flex-col w-full max-w-xs space-y-6 pt-2 text-center">
                 <div>
                     <h2 class="text-xl mb-4">Alphabet Slider</h2>
@@ -203,16 +252,15 @@
                         <input type="range" id="bigNumberSlider" min="0" max="1000000" value="500000" class="custom-slider">
                     </div>
                 </div>
-                 <div>
-                    <h2 class="text-xl mb-4">Biggest Slider</h2>
-                    <div class="number-slider-container">
-                        <p id="biggestNumberDisplay" class="number-display">500,000,000,000,000</p>
-                        <input type="range" id="biggestSlider" min="0" max="1000000000000000" value="500000000000000" class="custom-slider">
+                    <div>
+                        <h2 class="text-xl mb-4">Biggest Slider</h2>
+                        <div class="number-slider-container">
+                            <p id="biggestNumberDisplay" class="number-display">500,000,000,000,000</p>
+                            <input type="range" id="biggestSlider" min="0" max="1000000000000000" value="500000000000000" class="custom-slider">
+                        </div>
                     </div>
-                </div>
             </div>
 
-            <!-- Group 3: Number & Communication Interactions -->
             <div class="flex flex-col items-center space-y-10 text-center w-full max-w-xs">
                 <div>
                     <h2 class="text-xl mb-4">Number Relations</h2>
@@ -226,16 +274,12 @@
                         </div>
                     </div>
                 </div>
-                <div>
-                     <h2 class="text-xl mb-4">Communication Helper</h2>
-                     <div id="communicationHelper" class="communication-helper">
-                        <h3 class="font-semibold">Manners</h3>
-                        <div id="commManners" class="communication-category"></div>
-                        <h3 class="font-semibold">Feelings</h3>
-                        <div id="commFeelings" class="communication-category"></div>
-                        <h3 class="font-semibold">Talking</h3>
-                        <div id="commTalking" class="communication-category"></div>
-                     </div>
+                <div class="w-full">
+                   <h2 class="text-xl mb-4">Communication Helper</h2>
+                   <div id="communicationHelper" class="communication-helper">
+                        <div id="commTabsContainer" class="comm-tabs"></div>
+                        <div id="commContentContainer"></div>
+                   </div>
                 </div>
                 <div>
                     <h2 class="text-xl mb-4">Click a Number</h2>
@@ -243,15 +287,14 @@
                 </div>
             </div>
 
-             <!-- Group 4: Buttons & Switches -->
-            <div class="flex flex-col items-center space-y-10 text-center w-full max-w-xs">
-                 <div>
-                    <h2 class="text-xl mb-4">Knob Slider</h2>
-                    <div id="knobSlider" class="knob-slider-container w-full">
-                        <div class="knob-track"></div>
-                        <div id="knob" class="knob"></div>
+                <div class="flex flex-col items-center space-y-10 text-center w-full max-w-xs">
+                    <div>
+                        <h2 class="text-xl mb-4">Knob Slider</h2>
+                        <div id="knobSlider" class="knob-slider-container w-full">
+                            <div class="knob-track"></div>
+                            <div id="knob" class="knob"></div>
+                        </div>
                     </div>
-                </div>
                 <div>
                     <h2 class="text-xl mb-4">Switch</h2>
                     <div id="toggleSwitch" class="toggle-switch mx-auto">
@@ -276,56 +319,68 @@
 
             // --- Universal Audio/Speech Initializer ---
             function initializeAudio() {
+                // This function is safe to call multiple times.
                 if (isAudioReady) return;
+                
+                // Start Tone.js audio context
                 Tone.start().then(() => console.log("Audio context started."));
+
+                // A silent utterance to initialize speech synthesis on some browsers
                 const utterance = new SpeechSynthesisUtterance("");
                 utterance.volume = 0;
                 window.speechSynthesis.speak(utterance);
+                
                 isAudioReady = true;
                 console.log("Audio and Speech Initialized.");
-                document.body.removeEventListener('touchstart', initializeAudio);
-                document.body.removeEventListener('mousedown', initializeAudio);
+
+                // No need to remove listeners if the function is idempotent
             }
+            // Add listeners to initialize audio on first interaction
             document.body.addEventListener('touchstart', initializeAudio, { once: true });
             document.body.addEventListener('mousedown', initializeAudio, { once: true });
 
 
             // --- Sound Engine (using Tone.js) ---
             const baseSynth = new Tone.MembraneSynth({ pitchDecay: 0.02, octaves: 2, oscillator: { type: "sine" }, envelope: { attack: 0.01, decay: 0.3, sustain: 0.01, release: 0.2 } }).toDestination();
-            baseSynth.volume.value = 3; // Make gentle sounds louder
+            baseSynth.volume.value = 3;
             
             const softBellSynth = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.5, sustain: 0.1, release: 1.0 } }).toDestination();
             softBellSynth.volume.value = -6;
             
             const popSynth = new Tone.MembraneSynth({ pitchDecay: 0.05, octaves: 10, oscillator: { type: 'sine' }, envelope: { attack: 0.001, decay: 0.2, sustain: 0 } }).toDestination();
-            popSynth.volume.value = -8; // Make pop sounds quieter
+            popSynth.volume.value = -8;
             
             const breathSound = new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 1, decay: 1, sustain: 0.1, release: 1 } }).toDestination();
             breathSound.volume.value = -20;
 
             function playSound(note = 'C2', duration = '8n', synth = baseSynth) {
-                if (!isAudioReady) return;
+                if (!isAudioReady) {
+                    initializeAudio(); // Ensure audio is ready before playing sound
+                }
                 synth.triggerAttackRelease(note, duration);
             }
 
             // --- Speech Synthesis ---
             function speak(text) {
-                if (!isAudioReady) return;
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'en-US';
-                utterance.rate = 0.9;
-                utterance.pitch = 1.1;
-                window.speechSynthesis.speak(utterance);
+                if (!text) return; // Don't speak if there's no text
+                if (!isAudioReady) {
+                    initializeAudio(); // Make sure audio is ready before speaking
+                }
+                
+                // A small timeout helps ensure the audio context is fully active, especially on the first call.
+                setTimeout(() => {
+                    window.speechSynthesis.cancel(); // Cancel any previous speech
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 0.9;
+                    utterance.pitch = 1.1;
+                    window.speechSynthesis.speak(utterance);
+                }, 100);
             }
 
             // --- Breathing Circle ---
             document.getElementById('breathingCircle').addEventListener('click', () => {
-                if (!isAudioReady) return;
-                if (breathSound.volume.value === -20) {
-                    breathSound.triggerAttack();
-                    breathSound.volume.rampTo(0, 4).then(() => breathSound.volume.rampTo(-20, 4, '+4')).then(() => breathSound.triggerRelease('+8'));
-                }
+                playSound('C2', '8n', breathSound);
             });
 
             // --- Pop Buttons Interaction ---
@@ -373,63 +428,149 @@
                         case 'half': result = Math.floor(currentNum / 2); break;
                     }
                     relationDisplay.textContent = result;
-                    playSound('C4', '8n', softBellSynth); // Play sound but no speech
+                    playSound('C4', '8n', softBellSynth);
                 });
             });
 
             // --- Communication Helper ---
             const commCategories = {
-                commManners: ['Please', 'Thank You', 'Excuse Me', `You're Welcome`],
-                commFeelings: ['Happy', 'Sad', 'Excited', 'Calm', 'Tired'],
-                commTalking: ['Hello', 'Goodbye', 'My name is...', 'How are you?', 'Listen']
+                'I feel': ['I feel happy', 'I feel sad', 'I feel tired', 'I feel excited', 'I feel calm', 'I feel upset'],
+                'I want': ['I want to play', 'I want to watch', 'I want to listen', 'I want to go', 'I want a hug', 'I want to be alone'],
+                'I need': ['I need help', 'I need a break', 'I need the bathroom', 'I need food', 'I need a drink', 'I need my favorite thing'],
+                'Let\'s talk': ['Hello', 'Goodbye', 'How are you?', 'My name is', 'Yes', 'No'],
+                'Places': ['I want to go home', 'I want to go to school', 'I want to go outside', 'I want to go in the car', 'I want to go to the store'],
+                'Manners': ['Please', 'Thank you', 'Excuse me']
             };
 
-            for (const categoryId in commCategories) {
-                const container = document.getElementById(categoryId);
-                commCategories[categoryId].forEach(text => {
-                    const button = document.createElement('button');
-                    button.className = 'comm-button';
-                    button.textContent = text;
-                    button.addEventListener('click', () => {
-                        speak(text);
-                        playSound('E4', '16n', softBellSynth);
+            const tabsContainer = document.getElementById('commTabsContainer');
+            const contentContainer = document.getElementById('commContentContainer');
+            
+            function buildTab(category, isCustom = false) {
+                const tab = document.createElement('button');
+                tab.className = 'comm-tab';
+                tab.textContent = category;
+                tab.dataset.category = category.replace(/\s+/g, '-').toLowerCase();
+                tabsContainer.appendChild(tab);
+
+                const content = document.createElement('div');
+                content.className = 'comm-content';
+                content.dataset.category = category.replace(/\s+/g, '-').toLowerCase();
+
+                if (isCustom) {
+                    content.innerHTML = `<div id="customInputDisplay"></div><div id="customKeyboard" class="custom-keyboard"></div>`;
+                } else {
+                    const buttonGroup = document.createElement('div');
+                    buttonGroup.className = 'comm-button-group';
+                    commCategories[category].forEach(text => {
+                        const button = document.createElement('button');
+                        button.className = 'comm-button';
+                        button.textContent = text;
+                        button.addEventListener('click', () => speak(text));
+                        button.addEventListener('touchstart', (e) => { e.preventDefault(); speak(text); }, { passive: false });
+                        buttonGroup.appendChild(button);
                     });
-                     button.addEventListener('touchstart', (e) => {
-                        e.preventDefault();
-                        speak(text);
-                        playSound('E4', '16n', softBellSynth);
-                    }, { passive: false });
-                    container.appendChild(button);
+                    content.appendChild(buttonGroup);
+                }
+                contentContainer.appendChild(content);
+            }
+            
+            for (const category in commCategories) {
+                buildTab(category);
+            }
+            buildTab('My Words', true);
+
+            // --- Build the custom keyboard ---
+            const keyboardContainer = document.getElementById('customKeyboard');
+            const customInputDisplay = document.getElementById('customInputDisplay');
+            if (keyboardContainer && customInputDisplay) {
+                const keys = [
+                    ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
+                    { text: 'Space', action: 'space', span: 2 },
+                    { text: 'Delete', action: 'del', span: 2 },
+                    { text: 'Clear', action: 'clear', span: 2, id: 'key-clear' },
+                    { text: 'Speak', action: 'speak', span: 3, id: 'key-speak' }
+                ];
+
+                keys.forEach(keyInfo => {
+                    const keyElement = document.createElement('button');
+                    keyElement.className = 'key';
+                    const keyText = typeof keyInfo === 'string' ? keyInfo : keyInfo.text;
+                    keyElement.textContent = keyText;
+                    if (typeof keyInfo === 'object') {
+                        if (keyInfo.id) keyElement.id = keyInfo.id;
+                        if (keyInfo.span) keyElement.style.gridColumn = `span ${keyInfo.span}`;
+                    }
+                    
+                    keyElement.addEventListener('click', () => {
+                        if (typeof keyInfo === 'string') {
+                            playSound('C5', '16n', popSynth);
+                            customInputDisplay.textContent += keyText;
+                        } else {
+                            switch (keyInfo.action) {
+                                case 'space':
+                                    playSound('C5', '16n', popSynth);
+                                    customInputDisplay.textContent += ' ';
+                                    break;
+                                case 'del':
+                                    playSound('C5', '16n', popSynth);
+                                    customInputDisplay.textContent = customInputDisplay.textContent.slice(0, -1);
+                                    break;
+                                case 'clear':
+                                    playSound('C4', '16n', popSynth);
+                                    customInputDisplay.textContent = '';
+                                    break;
+                                case 'speak':
+                                    // This is the key fix: call speak directly. 
+                                    // The speak function itself now handles audio initialization.
+                                    speak(customInputDisplay.textContent);
+                                    break;
+                            }
+                        }
+                    });
+                    keyboardContainer.appendChild(keyElement);
                 });
             }
 
+            // Tab switching logic
+            function activateTab(tabToActivate) {
+                 if (tabToActivate) {
+                    const category = tabToActivate.dataset.category;
+                    tabsContainer.querySelectorAll('.comm-tab').forEach(tab => tab.classList.remove('active'));
+                    tabToActivate.classList.add('active');
+                    contentContainer.querySelectorAll('.comm-content').forEach(content => {
+                        content.classList.toggle('active', content.dataset.category === category);
+                    });
+                }
+            }
+            
+            tabsContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('comm-tab')) {
+                    activateTab(e.target);
+                }
+            });
+            activateTab(tabsContainer.querySelector('.comm-tab'));
 
             // --- Sliders Interaction ---
             const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             const alphabetSlider = document.getElementById('alphabetSlider');
             const alphabetDisplay = document.getElementById('alphabetDisplay');
-            alphabetSlider.addEventListener('input', () => {
-                alphabetDisplay.textContent = alphabet[alphabetSlider.value];
-            });
-            alphabetSlider.addEventListener('change', () => {
-                speak(alphabet[alphabetSlider.value]);
-            });
+            alphabetSlider.addEventListener('input', () => alphabetDisplay.textContent = alphabet[alphabetSlider.value]);
+            alphabetSlider.addEventListener('change', () => speak(alphabet[alphabetSlider.value]));
 
             const numberSlider = document.getElementById('numberSlider');
             const numberDisplay = document.getElementById('numberDisplay');
-            numberSlider.addEventListener('input', () => { numberDisplay.textContent = numberSlider.value; });
-            numberSlider.addEventListener('change', () => { speak(numberSlider.value); });
+            numberSlider.addEventListener('input', () => numberDisplay.textContent = numberSlider.value);
+            numberSlider.addEventListener('change', () => speak(numberSlider.value));
 
             const bigNumberSlider = document.getElementById('bigNumberSlider');
             const bigNumberDisplay = document.getElementById('bigNumberDisplay');
-            bigNumberSlider.addEventListener('input', () => { bigNumberDisplay.textContent = parseInt(bigNumberSlider.value).toLocaleString('en-US'); });
-            bigNumberSlider.addEventListener('change', () => { speak(bigNumberSlider.value); });
+            bigNumberSlider.addEventListener('input', () => bigNumberDisplay.textContent = parseInt(bigNumberSlider.value).toLocaleString('en-US'));
+            bigNumberSlider.addEventListener('change', () => speak(bigNumberSlider.value));
             
             const biggestSlider = document.getElementById('biggestSlider');
             const biggestNumberDisplay = document.getElementById('biggestNumberDisplay');
-            biggestSlider.addEventListener('input', () => { biggestNumberDisplay.textContent = BigInt(biggestSlider.value).toLocaleString('en-US'); });
-            biggestSlider.addEventListener('change', () => { speak(biggestSlider.value); });
-
+            biggestSlider.addEventListener('input', () => biggestNumberDisplay.textContent = BigInt(biggestSlider.value).toLocaleString('en-US'));
+            biggestSlider.addEventListener('change', () => speak(biggestSlider.value));
 
             // --- Knobbed Slider Interaction ---
             const knobSlider = document.getElementById('knobSlider');
