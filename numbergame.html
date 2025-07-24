@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Number Explorer</title>
+    <style>
+        /* General styling for the page */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #111;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: white;
+        }
+
+        /* The main container for the game area */
+        #gameArea {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: none; /* Hidden until the start button is pressed */
+        }
+
+        /* The video feed from the camera */
+        #cameraFeed {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            transform: translateX(-50%) translateY(-50%);
+            object-fit: cover; /* Ensures the video covers the whole screen */
+        }
+
+        /* The number displayed on top of the video */
+        #numberDisplay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 40vw; /* Very large font size, scales with screen width */
+            font-weight: bold;
+            color: #ffffff;
+            text-shadow: 0 0 25px rgba(0, 0, 0, 0.7); /* Shadow to make it readable */
+            cursor: default;
+            user-select: none; /* Prevents the number from being selected */
+            transition: transform 0.2s ease-out; /* Smooth transitions */
+        }
+        
+        /* Animation for when the number changes */
+        .jiggle {
+            animation: jiggle-animation 0.5s ease-in-out;
+        }
+
+        @keyframes jiggle-animation {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            25% { transform: translate(-50%, -50%) scale(1.1) rotate(-5deg); }
+            50% { transform: translate(-50%, -50%) scale(0.9) rotate(5deg); }
+            75% { transform: translate(-50%, -50%) scale(1.05) rotate(-2deg); }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+        }
+
+        /* Styling for the initial start screen */
+        #startScreen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            background-color: #3498db;
+            text-align: center;
+        }
+
+        #startScreen h1 {
+            font-size: 10vw;
+            margin-bottom: 20px;
+        }
+
+        /* Styling for the start button */
+        #startButton {
+            padding: 20px 40px;
+            font-size: 6vw;
+            font-weight: bold;
+            color: #3498db;
+            background-color: #ffffff;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="startScreen">
+        <h1>Number Explorer</h1>
+        <button id="startButton">Tap to Start</button>
+    </div>
+
+    <div id="gameArea">
+        <video id="cameraFeed" autoplay playsinline muted></video>
+        <div id="numberDisplay">0</div>
+    </div>
+
+    <canvas id="motionCanvas" style="display: none;"></canvas>
+
+    <script>
+        // --- DOM Elements ---
+        const startScreen = document.getElementById('startScreen');
+        const startButton = document.getElementById('startButton');
+        const gameArea = document.getElementById('gameArea');
+        const video = document.getElementById('cameraFeed');
+        const numberDisplay = document.getElementById('numberDisplay');
+        const motionCanvas = document.getElementById('motionCanvas');
+        const ctx = motionCanvas.getContext('2d', { willReadFrequently: true });
+
+        // --- Game State Variables ---
+        let currentNumber = 0;
+        let lastImageData;
+        let motionCooldown = false;
+        
+        // --- Constants ---
+        // How much motion is needed to trigger a change. Higher number = more motion needed.
+        const MOTION_THRESHOLD = 200000; 
+        // How long to wait (in milliseconds) before another motion can be detected.
+        const COOLDOWN_PERIOD = 1000; // 1 second
+
+        // --- Web Audio API for Sound ---
+        // This creates sound without needing any external audio files.
+        let audioCtx;
+        function playBoopSound() {
+            if (!audioCtx) {
+                // Initialize on the first sound play
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            // Create sound nodes
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            // Connect them: oscillator -> gain -> speakers
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            // Configure the sound to be a soft, pleasant "boop"
+            oscillator.type = 'sine'; // A smooth, pure tone
+            oscillator.frequency.setValueAtTime(380, audioCtx.currentTime); // A nice mid-range pitch
+            gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime); // Set volume to 50%
+
+            // Start the sound and then fade it out over 0.4 seconds
+            oscillator.start(audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
+            oscillator.stop(audioCtx.currentTime + 0.4);
+        }
+        
+        // --- Game Logic ---
+
+        // This function is called when the start button is pressed
+        async function startGame() {
+            startScreen.style.display = 'none';
+            gameArea.style.display = 'block';
+
+            try {
+                // Request access to the user's camera
+                // 'environment' prefers the back-facing camera
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                
+                // If successful, show the camera feed in the <video> element
+                video.srcObject = stream;
+                video.onloadedmetadata = () => {
+                    // Set the hidden canvas to the same size as the video feed
+                    motionCanvas.width = video.videoWidth;
+                    motionCanvas.height = video.videoHeight;
+                    // Start the main game loop
+                    gameLoop();
+                };
+            } catch (err) {
+                // If camera access is denied, show an error message
+                console.error("Camera access was denied:", err);
+                numberDisplay.textContent = '😢';
+                numberDisplay.style.fontSize = '25vw';
+                gameArea.innerHTML += "<p style='text-align:center; padding: 20px;'>Please allow camera access and reload the page.</p>";
+            }
+        }
+        
+        // This function runs continuously to check for motion
+        function gameLoop() {
+            // Draw the current video frame onto the hidden canvas
+            ctx.drawImage(video, 0, 0, motionCanvas.width, motionCanvas.height);
+            // Get the raw pixel data from the canvas
+            const currentImageData = ctx.getImageData(0, 0, motionCanvas.width, motionCanvas.height).data;
+
+            if (lastImageData && !motionCooldown) {
+                let motionAmount = 0;
+                // Loop through the pixel data and compare it to the last frame's data
+                // We only check every 20th pixel to make it run fast on a tablet
+                for (let i = 0; i < currentImageData.length; i += 20) {
+                    motionAmount += Math.abs(currentImageData[i] - lastImageData[i]);
+                }
+                
+                // If the total amount of change is above our threshold...
+                if (motionAmount > MOTION_THRESHOLD) {
+                    triggerNumberChange();
+                }
+            }
+            
+            // Store the current frame's data for the next loop
+            lastImageData = currentImageData;
+            // Ask the browser to run this function again on the next frame
+            requestAnimationFrame(gameLoop);
+        }
+
+        // This function handles changing the number
+        function triggerNumberChange() {
+            // Activate the cooldown to prevent rapid changes
+            motionCooldown = true;
+
+            // Add the 'jiggle' class to trigger the CSS animation
+            numberDisplay.classList.add('jiggle');
+            
+            // Play our sound
+            playBoopSound();
+
+            // Wait for the animation to mostly finish before changing the number
+            setTimeout(() => {
+                // Increment the number, looping back to 0 after 9
+                currentNumber = (currentNumber + 1) % 10;
+                numberDisplay.textContent = currentNumber;
+            }, 300); // 300 milliseconds
+
+            // When the animation ends, remove the class so it can be used again
+            numberDisplay.addEventListener('animationend', () => {
+                numberDisplay.classList.remove('jiggle');
+            }, { once: true });
+            
+            // After the cooldown period, allow motion detection again
+            setTimeout(() => {
+                motionCooldown = false;
+            }, COOLDOWN_PERIOD);
+        }
+
+        // --- Event Listeners ---
+        // When the start button is clicked or touched, run the startGame function
+        startButton.addEventListener('click', startGame);
+
+    </script>
+</body>
+</html>
